@@ -1,0 +1,4 @@
+name = BEMAS Survey
+description = Pushes filled in survey to CiviCRM
+package = BEMAS
+core = 7.x

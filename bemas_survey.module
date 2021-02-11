@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @param $node
+ * @param $submission\
+ *
+ * If this is a webform submission from a survey, pass the auestions and answers to civicrm
+ * where it will be further processed.
+ */
+function bemas_survey_webform_submission_insert($node, $submission) {
+  if (_bemas_survey_isSurvey($submission->nid)) {
+    civicrm_initialize();
+
+    $questionsAndAnsers = _bemas_survey_isSurvey_mergeQuestionsAndAnswers($submission);
+    CRM_Events_DrupalWebformSubmission::process($submission->nid, $submission->sid, $questionsAndAnsers);
+  }
+}
+
+function _bemas_survey_isSurvey($nid) {
+  // if this is a BEMAS survey, there must be a form component with a form key = evalform_type
+  $result = db_select('webform_component', 'wc')
+    ->fields('wc', ['nid'])
+    ->condition('nid', $nid, '=')
+    ->condition('form_key', 'evalform_type', '=')
+    ->execute()
+    ->fetchAssoc();
+
+  if ($result === FALSE) {
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
+}
+
+function _bemas_survey_isSurvey_mergeQuestionsAndAnswers($submission) {
+  $qa = [];
+
+  // get the questions (aka webform components)
+  $result = db_select('webform_component', 'wc')
+    ->fields('wc', ['cid', 'form_key'])
+    ->condition('nid', $submission->nid, '=')
+    ->execute();
+
+  // the cid is a number and corresponds to an answer in the submission data
+  // we use the form key as key in the array
+  // an answer is an array (with 1 element for a simple question
+  while ($record = $result->fetchAssoc()) {
+    $qa[$record['form_key']] = $submission->data[$record['cid']];
+  }
+
+  return $qa;
+}
