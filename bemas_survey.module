@@ -16,6 +16,11 @@ function bemas_survey_webform_submission_insert($node, $submission) {
   }
 }
 
+function bemas_survey_webform_submission_delete($node, $submission) {
+  civicrm_initialize();
+  CRM_Events_DrupalWebformSubmission::delete($submission->sid);
+}
+
 function _bemas_survey_isSurvey($nid) {
   // if this is a BEMAS survey, there must be a form component with a form key = evalform_type
   $result = db_select('webform_component', 'wc')
